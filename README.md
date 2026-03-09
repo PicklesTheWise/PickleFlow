@@ -1,70 +1,41 @@
-# Pickle_Flow
+# PickleFlow
 
-Standalone PickleReef module for an NPN pulse-output flow meter on ReefNet.
+ESP32-S3 flow meter firmware for Waveshare ESP32-S3 Touch LCD 2.8.
 
-## Features
+## What it does
 
-- ESP32-S3 PlatformIO project with its own board definition
-- LVGL + LovyanGFX status screen support for Waveshare ESP32-S3 Touch LCD 2.8
-- CST328 touch input wired into LVGL pointer driver
-- Wi-Fi + WebSocket module protocol (`reefnet.v1`)
-- NPN pulse counting using interrupt on GPIO input
-- Real-time flow telemetry (L/min, pulses/sec, total liters)
-- Runtime tuning over WebSocket (`set_param` / `set_parameter`)
-- Persistent calibration + settings via Preferences
+- Reads pulse flow sensor input on GPIO15 (PCNT-based counting)
+- Publishes status over WebSocket using `reefnet.v1`
+- Displays three swipeable pages:
+	- Main: LPH gauge + 1-hour average LPH
+	- Chart: rolling LPH history (1h/6h/12h/1d/1w)
+	- Stats: LPM, pulse rate, total volume + reset button
 
-## Default hardware mapping
+## Hardware defaults
 
-- Flow pulse input: `GPIO15`
-- Status LED: `GPIO2` (board builtin LED)
-- LCD backlight enable: `GPIO5`
+- Board: Waveshare ESP32-S3 Touch LCD 2.x
+- Flow pulse input: GPIO15
+- LCD backlight: GPIO5
+- Touch: CST328 (I2C)
 
-Display SPI/panel mapping follows the known-good `PickleWire` setup for this Waveshare board (ST7789 over `SPI2_HOST`).
+## Calibration
 
-`FLOW_SENSOR_PIN` is configured in `src/main.cpp` and defaults to `GPIO15` for the Waveshare ESP32-S3 Touch LCD 2.8 setup.
+- Flow calibration is fixed in firmware: `70.01 pulses/liter`.
+- This value is reported in status setpoints and is not writable by control commands.
 
-## NPN wiring notes
+## Control/API
 
-This firmware assumes an **NPN open-collector pulse output**:
+- Full WebSocket command reference: [PickleFlow-Commands.md](PickleFlow-Commands.md)
 
-- Sensor output transistor pulls line LOW on pulse
-- ESP32 pin uses `INPUT_PULLUP`
-- Interrupt edge: `FALLING`
-
-Typical wiring:
-
-- Sensor V+ -> sensor-rated supply (often 5V or 12V, per datasheet)
-- Sensor GND -> ESP32 GND (common ground)
-- Sensor pulse output -> `FLOW_SENSOR_PIN`
-
-If the sensor output is not open collector, level-shift to 3.3V-safe logic before ESP32 input.
-
-## WebSocket endpoint defaults
-
-- SSID: `ReefNet`
-- Password: `ReefController2026`
-- Server: `ws://192.168.4.1:80/ws`
-- Protocol: `reefnet.v1`
-- Module ID: `PickleFlow.FlowMeter`
-
-## Supported control parameters
-
-Send in `payload.parameters` with `command: set_param` or `set_parameter`:
-
-- `pulses_per_liter` (float > 0)
-- `report_interval_ms` (200..10000)
-- `flow_input_inverted` (0 or 1)
-- `reset_total_liters` (1 to reset counters)
-
-## Build
+## Build and flash
 
 ```bash
 pio run
+pio run -t upload
 ```
 
-## Upload + monitor
+## Serial monitor
 
 ```bash
-pio run -t upload
-pio device monitor
+pio device monitor -b 115200
 ```
