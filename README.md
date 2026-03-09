@@ -23,6 +23,12 @@ ESP32-S3 flow meter firmware for Waveshare ESP32-S3 Touch LCD 2.8.
 - Flow calibration is fixed in firmware: `70.01 pulses/liter`.
 - This value is reported in status setpoints and is not writable by control commands.
 
+## Secrets setup
+
+- Copy `include/secrets.example.h` to `include/secrets.h`
+- Set your local Wi-Fi credentials in `include/secrets.h`
+- `include/secrets.h` is intentionally git-ignored
+
 ## Control/API
 
 - Full WebSocket command reference: [PickleFlow-Commands.md](PickleFlow-Commands.md)
